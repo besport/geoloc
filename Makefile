@@ -8,7 +8,7 @@ all:
 	ocamlfind ocamlc -a -no-check-prims -o $(NAME).cma $(PACKAGES) $(NAME).cmo
 
 install: all
-	ocamlfind install geoloc META $(NAME).cma $(NAME).cmi
+	ocamlfind install ocaml-geoloc META $(NAME).cma $(NAME).cmi
 
 clean:
 	rm *.cmo *.cmi

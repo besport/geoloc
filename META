@@ -1,0 +1,3 @@
+version = "1.0"
+description = "Library using ocaml google map binding"
+archive(byte) = "geoloc.cma"
