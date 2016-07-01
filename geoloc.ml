@@ -40,39 +40,11 @@ let set_my_position_icon url =
 
 (** Function taking a string representing the id of the div
     containing the map **)
-let create_map (lat,lng) zoom id =
+let create_map (lat,lng) zoom elt =
   let center = LatLng.new_lat_lng lat lng in
   let opts = MapOptions.create ~center ~zoom () in
-  Map.new_map (Document.get_element_by_id id) ~opts ()
-
-(** GetMyPosition takes a function taking location status
-    and returning nothing, f is a callback for the function
-    getCurrentPosition
- **)
-(*let get_my_position f =
-  if (Geolocation.is_supported ()) then
-    let geo = Geolocation.geolocation in
-    let options = Geolocation.empty_position_options() in
-    let () = options##.enableHighAccuracy := true in
-    let f_success pos =
-      let coords = pos##.coords in
-      let latitude = coords##.latitude in
-      let longitude = coords##.longitude in
-      f (latitude,longitude)
-    in
-    let f_error err =
-      let code = err##.code in
-      if code = err##._TIMEOUT then
-        raise (NoLocation("Timeout"))
-      else
-        raise (NoLocation("Unknown"))
-    in
-    geo##getCurrentPosition
-      (Js.wrap_callback f_success)
-      (Js.wrap_callback f_error)
-      options
-  else
-    raise (NoLocation("Geolocation not supported"))*)
+  let elt = Converter.Element.t_of_dom elt in
+  Map.new_map elt ~opts ()
 
 let get_my_position () =
   let at,au = Lwt.wait () in

@@ -26,7 +26,7 @@ val set_my_position_icon : string -> unit
 
 (** Creates a map from a center (coords), a zoom and the id of
     the HTML element containing the map **)
-val create_map : float * float -> int -> string -> Map.t
+val create_map : float * float -> int -> Dom_html.element Js.t -> Map.t
 
 (** Function getting current "my position" and passint it to
     the given callback **)
