@@ -63,7 +63,7 @@ let get_my_position () =
       if code = err##._TIMEOUT then
         Lwt.wakeup_exn au (raise (NoLocation("Timeout")))
       else
-        Lwt.wakeup_exn au (raise (NoLocation("Unknown")))
+        Lwt.wakeup_exn au (raise (NoLocation("Unknwown")))
     in
     let () = geo##getCurrentPosition
         (Js.wrap_callback f_success)
@@ -93,17 +93,6 @@ let show_my_position ?(timeout=3.) map =
     else
       Lwt.return (Lwt_mutex.unlock lock)
   in
-  (*let callback (lat,lng) =
-    let latlng = LatLng.new_lat_lng lat lng in
-    let () = Marker.set_position my_position latlng in
-    let () = Marker.set_map my_position (Some(map)) in
-    let () = Marker.set_visible my_position true in
-    if !showing
-    then let _ = Lwt_js.sleep 3. in
-      let _ = show_my_position ~timeout map in
-      ()
-    else ()
-  in*)
   let%lwt () = Lwt_mutex.lock lock in
   if !showing
   then Lwt.return (Lwt_mutex.unlock lock)
@@ -216,10 +205,13 @@ let start_tracking path ?(timeout=3.) ?(min_distance=0.) () =
       let coords_l = latlng_of_coords coords in
       let arr = Polyline.get_path path in
       let size = MVCArray.get_length arr in
-      let last = MVCArray.get_at arr (size-1) in
-      let last = LatLng.t_of_js last in
-      let dist = Spherical.compute_distance_between
-                   coords_l last () in
+      let dist =
+        if size > 0
+        then let last = MVCArray.get_at arr (size-1) in
+          let last = LatLng.t_of_js last in
+          Spherical.compute_distance_between
+            coords_l last ()
+        else 0. in
       let () =
         if dist >= min_distance
         then ignore (add_coords path coords)
