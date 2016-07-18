@@ -168,6 +168,14 @@ val set_content : InfoWindow.t -> string -> unit
     the LatLng list **)
 val add_window_spots: string list -> LatLng.t list -> Map.t -> InfoWindow.t list
 
+(** Add a green marker for the user **)
+val add_marker_user :
+  picture_url:string ->
+  name:string ->
+  LatLng.t ->
+  Map.t ->
+  Marker.t
+
 (** Add a window with the given picture (url) and name **)
 val add_user_window : string -> string -> LatLng.t -> Map.t -> InfoWindow.t
 

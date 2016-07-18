@@ -359,3 +359,20 @@ let add_users_from_coords url_l name_l coords_l map =
 
 let close_window infowindow =
   InfoWindow.close infowindow
+
+let add_marker_user ~picture_url ~name post map =
+  let marker = add_marker_spot
+      ~icon:"http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+      post
+      map in
+  let openwindow event =
+    let lat = LatLng.lat post
+    and lng = LatLng.lng post in
+    let x = 0.000007 in
+    (* Put the window in the middle of the marker *)
+    let post = LatLng.new_lat_lng (lat+.x) lng in
+    let _ = add_user_window picture_url name post map in
+    () in
+  let _ =
+    Event.add_listener (Marker.t_to_js marker) "click" openwindow in
+  marker
