@@ -63,7 +63,7 @@ let get_my_position () =
       if code = err##._TIMEOUT then
         Lwt.wakeup_exn au (raise (NoLocation("Timeout")))
       else
-        Lwt.wakeup_exn au (raise (NoLocation("Unknwown")))
+        Lwt.wakeup_exn au (raise (NoLocation(Js.to_string err##.message)))
     in
     let () = geo##getCurrentPosition
         (Js.wrap_callback f_success)
