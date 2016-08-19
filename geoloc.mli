@@ -33,10 +33,12 @@ val create_map : float * float -> int -> Dom_html.element Js.t -> Map.t
 val get_my_position : unit -> (float*float) Lwt.t
 
 (** Show "my position" marker on the given map
-    timeout : seconds **)
-val show_my_position : ?timeout:float -> Map.t -> unit Lwt.t
+    And updates it every interval seconds.
+    This is the equivalent of HTML5's watchPosition **)
+val show_my_position : ?interval:float -> Map.t -> unit Lwt.t
 
-(** Hide "my position" marker on the current map **)
+(** Hide "my position" marker on the current map
+    Stops tracking myPosition **)
 val hide_my_position : unit -> unit Lwt.t
 
 (** Takes a boolean to check whether the marker has to be clickable
@@ -78,7 +80,7 @@ val create_path :
     meters has been done with the alst known position **)
 val start_tracking :
   path ->
-  ?timeout:float ->
+  ?interval:float ->
   ?min_distance:float ->
   unit ->
   unit Lwt.t

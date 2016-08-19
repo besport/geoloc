@@ -79,13 +79,16 @@ let showing = ref false
 let lock = Lwt_mutex.create ()
 
 (** Function taking 1 parameter : the map **)
-let show_my_position ?(timeout=3.) map =
+let show_my_position ?(interval=3.) map =
   let rec aux () =
     let%lwt (lat,lng) = get_my_position () in
+    let str = "Lat : "^(string_of_float lat)^"\n"^
+              "Lng : "^(string_of_float lng)^"\n" in
+    let () = Firebug.console##log (Js.string str) in
     let latlng = LatLng.new_lat_lng lat lng in
     let () = Marker.set_position my_position latlng in
     let%lwt () = Lwt_mutex.lock lock in
-    let%lwt () = Lwt_js.sleep timeout in
+    let%lwt () = Lwt_js.sleep interval in
     if !showing
     then
       let () = Lwt_mutex.unlock lock in
@@ -195,7 +198,7 @@ let coords_of_path path =
 let is_tracking = ref false
 let track_lock = Lwt_mutex.create ()
 
-let start_tracking path ?(timeout=3.) ?(min_distance=0.) () =
+let start_tracking path ?(interval=3.) ?(min_distance=0.) () =
   let%lwt () = Lwt_mutex.lock track_lock in
   if !is_tracking
   then Lwt.return (Lwt_mutex.unlock track_lock)
@@ -216,7 +219,7 @@ let start_tracking path ?(timeout=3.) ?(min_distance=0.) () =
         if dist >= min_distance
         then ignore (add_coords path coords)
         else () in
-      let%lwt () = Lwt_js.sleep timeout in
+      let%lwt () = Lwt_js.sleep interval in
       if !is_tracking
       then callback ()
       else Lwt.return ()
