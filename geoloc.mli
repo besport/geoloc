@@ -24,8 +24,8 @@ val my_position : Marker.t
 (** Change the icon for the "my position" marker **)
 val set_my_position_icon : string -> unit
 
-(** Creates a map from a center (coords), a zoom and the id of
-    the HTML element containing the map **)
+(** Creates a map from a center (coords), a zoom and
+    the HTML element which will contain the map (js_of_ocaml element) **)
 val create_map : float * float -> int -> Dom_html.element Js.t -> Map.t
 
 (** Function getting current "my position" and passint it to
