@@ -172,6 +172,7 @@ val add_window_spots: string list -> LatLng.t list -> Map.t -> InfoWindow.t list
 
 (** Add a green marker for the user **)
 val add_marker_user :
+  ?icon:string ->
   picture_url:string ->
   name:string ->
   LatLng.t ->

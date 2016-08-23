@@ -363,9 +363,14 @@ let add_users_from_coords url_l name_l coords_l map =
 let close_window infowindow =
   InfoWindow.close infowindow
 
-let add_marker_user ~picture_url ~name post map =
+let add_marker_user
+    ?(icon="http://maps.google.com/mapfiles/ms/icons/green-dot.png")
+    ~picture_url
+    ~name
+    post
+    map =
   let marker = add_marker_spot
-      ~icon:"http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+      ~icon
       post
       map in
   let openwindow event =
