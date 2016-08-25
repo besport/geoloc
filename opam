@@ -1,8 +1,8 @@
 opam-version: "1.2"
 name: "ocaml-geoloc"
 version: "1.0"
-maintainer: "Omar"
-authors: "Omar"
+maintainer: "o-marshmallow"
+authors: "o-marshmallow"
 homepage: ""
 bug-reports: ""
 license: ""
@@ -13,6 +13,6 @@ build: [
 install: [make "install"]
 remove: ["ocamlfind" "remove" "ocaml-geoloc"]
 depends: [
-  "ocaml-googlemap"
+  "ocaml-googlemaps"
   "ocamlfind" {build}
 ]
