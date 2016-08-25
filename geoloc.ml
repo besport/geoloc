@@ -1,4 +1,4 @@
-open Maps
+open Googlemaps
 
 exception NoLocation of string
 
