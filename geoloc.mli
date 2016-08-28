@@ -1,4 +1,4 @@
-open Maps
+open Googlemaps
 
 exception NoLocation of string
 
@@ -24,19 +24,20 @@ val my_position : Marker.t
 (** Change the icon for the "my position" marker **)
 val set_my_position_icon : string -> unit
 
-(** Creates a map from a center (coords), a zoom and the id of
-    the HTML element containing the map **)
+(** Creates a map from a center (coords), a zoom and
+    the HTML element which will contain the map (js_of_ocaml element) **)
 val create_map : float * float -> int -> Dom_html.element Js.t -> Map.t
 
-(** Function getting current "my position" and passint it to
-    the given callback **)
+(** Function getting current "my position" coordinates **)
 val get_my_position : unit -> (float*float) Lwt.t
 
 (** Show "my position" marker on the given map
-    timeout : seconds **)
-val show_my_position : ?timeout:float -> Map.t -> unit Lwt.t
+    And updates it every interval seconds.
+    This is the equivalent of HTML5's watchPosition **)
+val show_my_position : ?interval:float -> Map.t -> unit Lwt.t
 
-(** Hide "my position" marker on the current map **)
+(** Hide "my position" marker on the current map
+    Stops tracking myPosition **)
 val hide_my_position : unit -> unit Lwt.t
 
 (** Takes a boolean to check whether the marker has to be clickable
@@ -78,7 +79,7 @@ val create_path :
     meters has been done with the alst known position **)
 val start_tracking :
   path ->
-  ?timeout:float ->
+  ?interval:float ->
   ?min_distance:float ->
   unit ->
   unit Lwt.t
@@ -167,6 +168,15 @@ val set_content : InfoWindow.t -> string -> unit
 (** Creates and add many window spots defined by the string list and
     the LatLng list **)
 val add_window_spots: string list -> LatLng.t list -> Map.t -> InfoWindow.t list
+
+(** Add a green marker for the user **)
+val add_marker_user :
+  ?icon:string ->
+  picture_url:string ->
+  name:string ->
+  LatLng.t ->
+  Map.t ->
+  Marker.t
 
 (** Add a window with the given picture (url) and name **)
 val add_user_window : string -> string -> LatLng.t -> Map.t -> InfoWindow.t

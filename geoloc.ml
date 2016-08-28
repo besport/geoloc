@@ -1,4 +1,4 @@
-open Maps
+open Googlemaps
 
 exception NoLocation of string
 
@@ -63,7 +63,7 @@ let get_my_position () =
       if code = err##._TIMEOUT then
         Lwt.wakeup_exn au (raise (NoLocation("Timeout")))
       else
-        Lwt.wakeup_exn au (raise (NoLocation("Unknown")))
+        Lwt.wakeup_exn au (raise (NoLocation(Js.to_string err##.message)))
     in
     let () = geo##getCurrentPosition
         (Js.wrap_callback f_success)
@@ -79,13 +79,16 @@ let showing = ref false
 let lock = Lwt_mutex.create ()
 
 (** Function taking 1 parameter : the map **)
-let show_my_position ?(timeout=3.) map =
+let show_my_position ?(interval=3.) map =
   let rec aux () =
     let%lwt (lat,lng) = get_my_position () in
+    let str = "Lat : "^(string_of_float lat)^"\n"^
+              "Lng : "^(string_of_float lng)^"\n" in
+    let () = Firebug.console##log (Js.string str) in
     let latlng = LatLng.new_lat_lng lat lng in
     let () = Marker.set_position my_position latlng in
     let%lwt () = Lwt_mutex.lock lock in
-    let%lwt () = Lwt_js.sleep timeout in
+    let%lwt () = Lwt_js.sleep interval in
     if !showing
     then
       let () = Lwt_mutex.unlock lock in
@@ -93,17 +96,6 @@ let show_my_position ?(timeout=3.) map =
     else
       Lwt.return (Lwt_mutex.unlock lock)
   in
-  (*let callback (lat,lng) =
-    let latlng = LatLng.new_lat_lng lat lng in
-    let () = Marker.set_position my_position latlng in
-    let () = Marker.set_map my_position (Some(map)) in
-    let () = Marker.set_visible my_position true in
-    if !showing
-    then let _ = Lwt_js.sleep 3. in
-      let _ = show_my_position ~timeout map in
-      ()
-    else ()
-  in*)
   let%lwt () = Lwt_mutex.lock lock in
   if !showing
   then Lwt.return (Lwt_mutex.unlock lock)
@@ -206,7 +198,7 @@ let coords_of_path path =
 let is_tracking = ref false
 let track_lock = Lwt_mutex.create ()
 
-let start_tracking path ?(timeout=3.) ?(min_distance=0.) () =
+let start_tracking path ?(interval=3.) ?(min_distance=0.) () =
   let%lwt () = Lwt_mutex.lock track_lock in
   if !is_tracking
   then Lwt.return (Lwt_mutex.unlock track_lock)
@@ -216,15 +208,18 @@ let start_tracking path ?(timeout=3.) ?(min_distance=0.) () =
       let coords_l = latlng_of_coords coords in
       let arr = Polyline.get_path path in
       let size = MVCArray.get_length arr in
-      let last = MVCArray.get_at arr (size-1) in
-      let last = LatLng.t_of_js last in
-      let dist = Spherical.compute_distance_between
-                   coords_l last () in
+      let dist =
+        if size > 0
+        then let last = MVCArray.get_at arr (size-1) in
+          let last = LatLng.t_of_js last in
+          Spherical.compute_distance_between
+            coords_l last ()
+        else 0. in
       let () =
         if dist >= min_distance
         then ignore (add_coords path coords)
         else () in
-      let%lwt () = Lwt_js.sleep timeout in
+      let%lwt () = Lwt_js.sleep interval in
       if !is_tracking
       then callback ()
       else Lwt.return ()
@@ -367,3 +362,25 @@ let add_users_from_coords url_l name_l coords_l map =
 
 let close_window infowindow =
   InfoWindow.close infowindow
+
+let add_marker_user
+    ?(icon="http://maps.google.com/mapfiles/ms/icons/green-dot.png")
+    ~picture_url
+    ~name
+    post
+    map =
+  let marker = add_marker_spot
+      ~icon
+      post
+      map in
+  let openwindow event =
+    let lat = LatLng.lat post
+    and lng = LatLng.lng post in
+    let x = 0.000007 in
+    (* Put the window in the middle of the marker *)
+    let post = LatLng.new_lat_lng (lat+.x) lng in
+    let _ = add_user_window picture_url name post map in
+    () in
+  let _ =
+    Event.add_listener (Marker.t_to_js marker) "click" openwindow in
+  marker
