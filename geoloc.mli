@@ -69,6 +69,9 @@ val create_icon_marker :
 (** Hide the given marker **)
 val hide_marker : Marker.t -> unit
 
+(** Show the given marker **)
+val show_marker : Marker.t -> unit
+
 (* Path *)
 (** Creates a new empty path **)
 val create_path :

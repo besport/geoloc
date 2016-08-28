@@ -143,6 +143,9 @@ let create_icon_marker
 let hide_marker marker =
   Marker.set_visible marker false
 
+let show_marker marker =
+  Marker.set_visible marker true
+
 (* Path *)
 let create_path ?(color="#000000") ?(weight=5.) ?(visible=true) map  =
   let opts = PolylineOptions.create
