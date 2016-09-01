@@ -60,18 +60,17 @@ let get_my_position () =
     let f_error err =
       let code = err##.code in
       if code = err##._TIMEOUT then
-        Lwt.wakeup_exn au (raise (NoLocation("Timeout")))
+        Lwt.wakeup_exn au (NoLocation("Timeout"))
       else
-        Lwt.wakeup_exn au (raise (NoLocation(Js.to_string err##.message)))
+        Lwt.wakeup_exn au (NoLocation(Js.to_string err##.message))
     in
-    let () = geo##getCurrentPosition
-        (Js.wrap_callback f_success)
-        (Js.wrap_callback f_error)
-        options in
-    at
+    geo##getCurrentPosition
+      (Js.wrap_callback f_success)
+      (Js.wrap_callback f_error)
+      options
   else
-    raise (NoLocation("Geolocation not supported"))
-
+    Lwt.wakeup_exn au (NoLocation("Geolocation not supported")) ;
+  at
 
 (* My position *)
 let showing = ref false
