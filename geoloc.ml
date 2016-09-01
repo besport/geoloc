@@ -25,18 +25,17 @@ let coords_of_latlng ll =
 
 (** Value containing "my position" **)
 let my_position =
-  let opts = MarkerOptions.create
-      ~draggable:false
-      ~clickable:true
-      ~title:"Ma position"
-      ~visible:false
-      ~z_index:17.
-      ()
-  in
-  Marker.new_marker ~opts ()
+  lazy (let opts = MarkerOptions.create
+            ~draggable:false
+            ~clickable:true
+            ~title:"Ma position"
+            ~visible:false
+            ~z_index:17.
+            ()
+        in Marker.new_marker ~opts ())
 
 let set_my_position_icon url =
-  Marker.set_icon my_position (Icon.create ~url ())
+  Marker.set_icon (Lazy.force my_position) (Icon.create ~url ())
 
 (** Function taking a string representing the id of the div
     containing the map **)
@@ -86,7 +85,7 @@ let show_my_position ?(interval=3.) map =
               "Lng : "^(string_of_float lng)^"\n" in
     let () = Firebug.console##log (Js.string str) in
     let latlng = LatLng.new_lat_lng lat lng in
-    let () = Marker.set_position my_position latlng in
+    let () = Marker.set_position (Lazy.force my_position) latlng in
     let%lwt () = Lwt_mutex.lock lock in
     let%lwt () = Lwt_js.sleep interval in
     if !showing
@@ -100,15 +99,15 @@ let show_my_position ?(interval=3.) map =
   if !showing
   then Lwt.return (Lwt_mutex.unlock lock)
   else let () = showing := true in
-       let () = Marker.set_map my_position (Some(map)) in
-       let () = Marker.set_visible my_position true in
+       let () = Marker.set_map (Lazy.force my_position) (Some(map)) in
+       let () = Marker.set_visible (Lazy.force my_position) true in
        let () = Lwt_mutex.unlock lock in
        aux ()
 
 let hide_my_position () =
   let%lwt () = Lwt_mutex.lock lock in
   let () = showing := false in
-  let () = Marker.set_visible my_position false in
+  let () = Marker.set_visible (Lazy.force my_position) false in
   let () = Lwt_mutex.unlock lock in
   Lwt.return ()
 
@@ -195,8 +194,6 @@ let latlngs_of_path path =
 let coords_of_path path =
   let latlngs = latlngs_of_path path in
   List.map coords_of_latlng latlngs
-
-
 
 let is_tracking = ref false
 let track_lock = Lwt_mutex.create ()

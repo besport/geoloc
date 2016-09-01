@@ -19,7 +19,7 @@ val latlng_of_coords : float * float -> LatLng.t
 val coords_of_latlng : LatLng.t -> float * float
 
 (** Marker for "my position" **)
-val my_position : Marker.t
+val my_position : Marker.t Lazy.t
 
 (** Change the icon for the "my position" marker **)
 val set_my_position_icon : string -> unit
