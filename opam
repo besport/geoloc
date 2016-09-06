@@ -3,10 +3,10 @@ name: "ocaml-geoloc"
 version: "1.0"
 maintainer: "o-marshmallow"
 authors: "o-marshmallow"
-homepage: ""
-bug-reports: ""
-license: ""
-dev-repo: "https://github.com/besport/geoloc"
+homepage: "https://github.com/besport/geoloc"
+bug-reports: "https://github.com/besport/geoloc/issues"
+license: "undefined"
+dev-repo: "https://github.com/besport/geoloc.git"
 build: [
   [make]
 ]
