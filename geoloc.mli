@@ -61,6 +61,7 @@ val create_icon_marker :
   ?draggable:bool ->
   ?title:string ->
   ?visible:bool ->
+  ?size:Size.t ->
   string ->
   LatLng.t ->
   Map.t ->
