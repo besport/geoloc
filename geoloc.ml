@@ -127,6 +127,7 @@ let create_icon_marker
     ?(draggable=false)
     ?(title="")
     ?(visible=true)
+    ?scaled_size
     ?size
     url
     latlng
@@ -134,7 +135,7 @@ let create_icon_marker
   let marker =
     create_simple_marker ~clickable ~draggable ~title
                          ~visible:false latlng map in
-  let icon = Icon.create ?size ~url () in
+  let icon = Icon.create ?scaled_size ?size ~url () in
   Marker.set_icon marker icon;
   Marker.set_visible marker true;
   marker
