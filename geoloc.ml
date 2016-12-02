@@ -240,8 +240,8 @@ let geocoder () = Geocoder.new_geocoder ()
 let address_of_latlng latlng =
   let at, au = Lwt.wait () in
   let callback' result_l (status:geocoder_status) =
-    match status with
-    | Ok ->
+    match status, result_l with
+    | Ok, Some result_l ->
       let addr_list =
         List.map GeocoderResult.formatted_address result_l in
       Lwt.wakeup au (addr_list)
@@ -259,8 +259,8 @@ let address_of_coords (lat,lng) =
 let latlng_of_address addr =
   let at, au = Lwt.wait () in
   let callback' result_l (status:geocoder_status) =
-    match status with
-    | Ok ->
+    match status, result_l with
+    | Ok, Some result_l ->
       if List.length result_l = 0
       then Lwt.wakeup au None
       else
