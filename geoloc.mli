@@ -18,11 +18,10 @@ val latlng_of_coords : float * float -> LatLng.t
 (** Convert latitude longitude point to coords **)
 val coords_of_latlng : LatLng.t -> float * float
 
-(** Marker for "my position" **)
-val my_position : Marker.t Lazy.t
+val make_my_position_marker : ?title:string -> unit -> Marker.t
 
 (** Change the icon for the "my position" marker **)
-val set_my_position_icon : string -> unit
+val set_my_position_icon : my_position:Marker.t -> string -> unit
 
 (** Creates a map from a center (coords), a zoom and
     the HTML element which will contain the map (js_of_ocaml element) **)
@@ -34,11 +33,13 @@ val get_my_position : unit -> (float*float) Lwt.t
 (** Show "my position" marker on the given map
     And updates it every interval seconds.
     This is the equivalent of HTML5's watchPosition **)
-val show_my_position : ?interval:float -> Map.t -> unit Lwt.t
+val show_my_position :
+  ?interval:float -> my_position:Marker.t -> Map.t -> unit Lwt.t
 
 (** Hide "my position" marker on the current map
-    Stops tracking myPosition **)
-val hide_my_position : unit -> unit Lwt.t
+    Stops tracking my_position **)
+val hide_my_position :
+  ?show_my_position_th:unit Lwt.t -> my_position:Marker.t -> unit
 
 (** Takes a boolean to check whether the marker has to be clickable
     or not, draggable or visible. Function also takes a title for
@@ -90,7 +91,7 @@ val start_tracking :
   unit Lwt.t
 
 (** Stop the tracking of the current path **)
-val stop_tracking : path -> unit Lwt.t
+val stop_tracking : tracking_th:unit Lwt.t -> unit
 
 (** Add a checkpoint (LatLng point) to the given path **)
 val add_latlng : path -> LatLng.t -> int
