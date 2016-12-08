@@ -23,19 +23,19 @@ let latlng_of_coords = function
 let coords_of_latlng ll =
   (LatLng.lat ll), (LatLng.lng ll)
 
-(** Value containing "my position" **)
-let my_position =
-  lazy (let opts = MarkerOptions.create
-            ~draggable:false
-            ~clickable:true
-            ~title:"Ma position"
-            ~visible:false
-            ~z_index:17.
-            ()
-        in Marker.new_marker ~opts ())
+let make_my_position_marker ?(title="My position") () =
+  let opts =
+    MarkerOptions.create
+      ~draggable:false
+      ~clickable:true
+      ~title
+      ~visible:false
+      ~z_index:17.
+      ()
+  in Marker.new_marker ~opts ()
 
-let set_my_position_icon url =
-  Marker.set_icon (Lazy.force my_position) (Icon.create ~url ())
+let set_my_position_icon ~my_position url =
+  Marker.set_icon my_position (Icon.create ~url ())
 
 (** Function taking a string representing the id of the div
     containing the map **)
@@ -72,43 +72,25 @@ let get_my_position () =
     Lwt.wakeup_exn au (NoLocation("Geolocation not supported")) ;
   at
 
-(* My position *)
-let showing = ref false
-let lock = Lwt_mutex.create ()
-
-(** Function taking 1 parameter : the map **)
-let show_my_position ?(interval=3.) map =
+(** Function taking 2 parameters : (my_position marker) and (the map) *)
+let show_my_position ?(interval=3.) ~my_position map =
   let rec aux () =
     let%lwt (lat,lng) = get_my_position () in
     let str = "Lat : "^(string_of_float lat)^"\n"^
               "Lng : "^(string_of_float lng)^"\n" in
     let () = Firebug.console##log (Js.string str) in
     let latlng = LatLng.new_lat_lng lat lng in
-    let () = Marker.set_position (Lazy.force my_position) latlng in
-    let%lwt () = Lwt_mutex.lock lock in
+    let () = Marker.set_position my_position latlng in
     let%lwt () = Lwt_js.sleep interval in
-    if !showing
-    then
-      let () = Lwt_mutex.unlock lock in
-      aux ()
-    else
-      Lwt.return (Lwt_mutex.unlock lock)
+    aux ()
   in
-  let%lwt () = Lwt_mutex.lock lock in
-  if !showing
-  then Lwt.return (Lwt_mutex.unlock lock)
-  else let () = showing := true in
-       let () = Marker.set_map (Lazy.force my_position) (Some(map)) in
-       let () = Marker.set_visible (Lazy.force my_position) true in
-       let () = Lwt_mutex.unlock lock in
-       aux ()
+  let () = Marker.set_map my_position (Some(map)) in
+  let () = Marker.set_visible my_position true in
+  aux ()
 
-let hide_my_position () =
-  let%lwt () = Lwt_mutex.lock lock in
-  let () = showing := false in
-  let () = Marker.set_visible (Lazy.force my_position) false in
-  let () = Lwt_mutex.unlock lock in
-  Lwt.return ()
+let hide_my_position ?(show_my_position_th=Lwt.return_unit) ~my_position =
+  Lwt.cancel show_my_position_th;
+  Marker.set_visible my_position false
 
 (* Marker *)
 let create_simple_marker
@@ -196,43 +178,30 @@ let coords_of_path path =
   let latlngs = latlngs_of_path path in
   List.map coords_of_latlng latlngs
 
-let is_tracking = ref false
-let track_lock = Lwt_mutex.create ()
-
 let start_tracking path ?(interval=3.) ?(min_distance=0.) () =
-  let%lwt () = Lwt_mutex.lock track_lock in
-  if !is_tracking
-  then Lwt.return (Lwt_mutex.unlock track_lock)
-  else
-    let rec callback () =
-      let%lwt coords = get_my_position () in
-      let coords_l = latlng_of_coords coords in
-      let arr = Polyline.get_path path in
-      let size = MVCArray.get_length arr in
-      let dist =
-        if size > 0
-        then let last = MVCArray.get_at arr (size-1) in
-          let last = LatLng.t_of_js last in
-          Spherical.compute_distance_between
-            coords_l last ()
-        else 0. in
-      let () =
-        if dist >= min_distance
-        then ignore (add_coords path coords)
-        else () in
-      let%lwt () = Lwt_js.sleep interval in
-      if !is_tracking
-      then callback ()
-      else Lwt.return ()
-    in
-    let () = is_tracking := true in
-    let () = Lwt_mutex.unlock track_lock in
+  let rec callback () =
+    let%lwt coords = get_my_position () in
+    let coords_l = latlng_of_coords coords in
+    let arr = Polyline.get_path path in
+    let size = MVCArray.get_length arr in
+    let dist =
+      if size > 0
+      then let last = MVCArray.get_at arr (size-1) in
+        let last = LatLng.t_of_js last in
+        Spherical.compute_distance_between
+          coords_l last ()
+      else 0. in
+    let () =
+      if dist >= min_distance
+      then ignore (add_coords path coords)
+      else () in
+    let%lwt () = Lwt_js.sleep interval in
     callback ()
+  in
+  callback ()
 
-let stop_tracking path =
-  let%lwt () = Lwt_mutex.lock track_lock in
-  let () = is_tracking := false in
-  Lwt.return (Lwt_mutex.unlock track_lock)
+let stop_tracking ~tracking_th =
+  Lwt.cancel tracking_th
 
 (* Geocoding *)
 let geocoder () = Geocoder.new_geocoder ()
