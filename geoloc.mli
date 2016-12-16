@@ -25,7 +25,9 @@ val set_my_position_icon : my_position:Marker.t -> string -> unit
 
 (** Creates a map from a center (coords), a zoom and
     the HTML element which will contain the map (js_of_ocaml element) **)
-val create_map : float * float -> int -> Dom_html.element Js.t -> Map.t
+val create_map :
+  ?mapoptions:Googlemaps.MapOptions.t -> float * float -> int
+  -> Dom_html.element Js.t -> Map.t
 
 (** Function getting current "my position" coordinates **)
 val get_my_position : unit -> (float*float) Lwt.t

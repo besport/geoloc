@@ -37,11 +37,16 @@ let make_my_position_marker ?(title="My position") () =
 let set_my_position_icon ~my_position url =
   Marker.set_icon my_position (Icon.create ~url ())
 
-(** Function taking a string representing the id of the div
-    containing the map **)
-let create_map (lat,lng) zoom elt =
+let create_map ?mapoptions (lat,lng) zoom elt =
   let center = LatLng.new_lat_lng lat lng in
-  let opts = MapOptions.create ~center ~zoom () in
+  let opts = match mapoptions with
+    | None ->
+      MapOptions.create ~center ~zoom ()
+    | Some o ->
+      MapOptions.set_center o center;
+      MapOptions.set_zoom o zoom;
+      o
+  in
   let elt = Converter.Element.t_of_dom elt in
   Map.new_map elt ~opts ()
 
