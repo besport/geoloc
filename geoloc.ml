@@ -50,7 +50,7 @@ let create_map ?mapoptions (lat,lng) zoom elt =
   let elt = Converter.Element.t_of_dom elt in
   Map.new_map elt ~opts ()
 
-let get_my_position () =
+let get_my_position ?(timeout=5.) () =
   let at,au = Lwt.wait () in
   if (Geolocation.is_supported ()) then
     let geo = Geolocation.geolocation in
@@ -103,17 +103,27 @@ let get_my_position () =
            options
   else
     Lwt.wakeup_exn au (NoLocation("Geolocation not supported")) ;
-  at
+  Lwt.pick [
+      at;
+      (let%lwt () = Lwt_js.sleep timeout in
+       Lwt.fail_with "Geolocation takes too long!")
+    ]
 
 (** Function taking 2 parameters : (my_position marker) and (the map) *)
 let show_my_position ?(interval=3.) ~my_position map =
   let rec aux () =
-    let%lwt (lat,lng) = get_my_position () in
-    let str = "Lat : "^(string_of_float lat)^"\n"^
-              "Lng : "^(string_of_float lng)^"\n" in
-    let () = Firebug.console##log (Js.string str) in
-    let latlng = LatLng.new_lat_lng lat lng in
-    let () = Marker.set_position my_position latlng in
+    let%lwt () =
+      try%lwt
+        let%lwt (lat,lng) = get_my_position () in
+        let str = "Lat : "^(string_of_float lat)^"\n"^
+                  "Lng : "^(string_of_float lng)^"\n" in
+        let () = Firebug.console##log (Js.string str) in
+        let latlng = LatLng.new_lat_lng lat lng in
+        let () = Marker.set_position my_position latlng in
+        Lwt.return_unit
+      with Failure "Geolocation takes too long!" ->
+        Lwt_js.sleep 1.
+    in
     let%lwt () = Lwt_js.sleep interval in
     aux ()
   in
