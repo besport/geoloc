@@ -120,7 +120,7 @@ let show_my_position ?(interval=3.) ~my_position map =
         let latlng = LatLng.new_lat_lng lat lng in
         let () = Marker.set_position my_position latlng in
         Lwt.return_unit
-      with Failure "Geolocation takes too long!" ->
+      with Failure _ ->
         Lwt_js.sleep 1.
     in
     let%lwt () = Lwt_js.sleep interval in
