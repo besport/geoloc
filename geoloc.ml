@@ -83,24 +83,23 @@ let get_my_position ?(timeout=5.) () =
          let longitude = pos##.longitude in
          Lwt.wakeup au (latitude,longitude)
        in
-       try
-         (* Bypass cordova-plugin-geolocation's JS interface!!
-            Because for some reasons, it doesn't work properly on iOS. *)
-         cordova##exec
-           (Js.wrap_callback f_success_cordova)
-           (Js.wrap_callback f_error)
-           (Js.string "Geolocation")
-           (Js.string "getLocation")
-           (* (object%js *) (* For some unclear reasons, this doesn't work! *)
-           (*    val enableHighAccuracy = Js._true *)
-           (*    val maximumAge = 0 *)
-           (*    val timeout = infinity *)
-           (*  end) *)
-       with _ ->
-         geo##getCurrentPosition
-           (Js.wrap_callback f_success)
-           (Js.wrap_callback f_error)
-           options
+       (* Bypass cordova-plugin-geolocation's JS interface!!
+          Because for some reasons, it doesn't work properly on iOS. 
+          Warning: cordova##exec doesn't block. It returns immediately.
+          It doesn't raise an exception if the callee doesn't exist.
+          If the callee doesn't exist, none of the callbacks will be
+          called.
+        *)
+       cordova##exec
+         (Js.wrap_callback f_success_cordova)
+         (Js.wrap_callback f_error)
+         (Js.string "Geolocation")
+         (Js.string "getLocation")
+         (* (object%js *) (* For some unclear reasons, this doesn't work! *)
+         (*    val enableHighAccuracy = Js._true *)
+         (*    val maximumAge = 0 *)
+         (*    val timeout = infinity *)
+         (*  end) *)
   else
     Lwt.wakeup_exn au (NoLocation("Geolocation not supported")) ;
   Lwt.pick [
