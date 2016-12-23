@@ -50,7 +50,7 @@ let create_map ?mapoptions (lat,lng) zoom elt =
   let elt = Converter.Element.t_of_dom elt in
   Map.new_map elt ~opts ()
 
-let get_my_position () =
+let get_my_position ?(timeout=5.) () =
   let at,au = Lwt.wait () in
   if (Geolocation.is_supported ()) then
     let geo = Geolocation.geolocation in
@@ -69,23 +69,61 @@ let get_my_position () =
       else
         Lwt.wakeup_exn au (NoLocation(Js.to_string err##.message))
     in
-    geo##getCurrentPosition
-      (Js.wrap_callback f_success)
-      (Js.wrap_callback f_error)
-      options
+    (* Warning: behaviour undefined if you cordova-plugin-geolocation
+       is not installed! *)
+    match Js.Optdef.to_option (Js.Unsafe.global##.cordova) with
+    | None ->
+       geo##getCurrentPosition
+         (Js.wrap_callback f_success)
+         (Js.wrap_callback f_error)
+         options
+    | Some cordova ->
+       (* Warning: big hack here, because cordova-plugin-geolocation is broken *)
+       let f_success_cordova pos =
+         let latitude = pos##.latitude in
+         let longitude = pos##.longitude in
+         Lwt.wakeup au (latitude,longitude)
+       in
+       (* Bypass cordova-plugin-geolocation's JS interface!!
+          Because for some reasons, it doesn't work properly on iOS.
+          Warning: cordova##exec doesn't block. It returns immediately.
+          It doesn't raise an exception if the callee doesn't exist.
+          If the callee doesn't exist, none of the callbacks will be
+          called.
+        *)
+       cordova##exec
+         (Js.wrap_callback f_success_cordova)
+         (Js.wrap_callback f_error)
+         (Js.string "Geolocation")
+         (Js.string "getLocation")
+         (* (object%js *) (* For some unclear reasons, this doesn't work! *)
+         (*    val enableHighAccuracy = Js._true *)
+         (*    val maximumAge = 0 *)
+         (*    val timeout = infinity *)
+         (*  end) *)
   else
     Lwt.wakeup_exn au (NoLocation("Geolocation not supported")) ;
-  at
+  Lwt.pick [
+      at;
+      (let%lwt () = Lwt_js.sleep timeout in
+       Lwt.fail_with "Geolocation takes too long!")
+    ]
 
 (** Function taking 2 parameters : (my_position marker) and (the map) *)
 let show_my_position ?(interval=3.) ~my_position map =
   let rec aux () =
-    let%lwt (lat,lng) = get_my_position () in
-    let str = "Lat : "^(string_of_float lat)^"\n"^
-              "Lng : "^(string_of_float lng)^"\n" in
-    let () = Firebug.console##log (Js.string str) in
-    let latlng = LatLng.new_lat_lng lat lng in
-    let () = Marker.set_position my_position latlng in
+    let%lwt () =
+      try%lwt
+        let%lwt (lat,lng) = get_my_position () in
+        let str = "Lat : "^(string_of_float lat)^"\n"^
+                  "Lng : "^(string_of_float lng)^"\n" in
+        let () = Firebug.console##log (Js.string str) in
+        let latlng = LatLng.new_lat_lng lat lng in
+        let () = Marker.set_position my_position latlng in
+        Lwt.return_unit
+      with Failure _ ->
+        Lwt_js.sleep 1.
+    in
     let%lwt () = Lwt_js.sleep interval in
     aux ()
   in

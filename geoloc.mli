@@ -30,7 +30,7 @@ val create_map :
   -> Dom_html.element Js.t -> Map.t
 
 (** Function getting current "my position" coordinates **)
-val get_my_position : unit -> (float*float) Lwt.t
+val get_my_position : ?timeout:float -> unit -> (float*float) Lwt.t
 
 (** Show "my position" marker on the given map
     And updates it every interval seconds.
