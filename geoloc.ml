@@ -77,14 +77,15 @@ let get_my_position ?(timeout=5.) () =
          (Js.wrap_callback f_success)
          (Js.wrap_callback f_error)
          options
-    | Some cordova -> (* Warning: big hack here, because of iOS *)
+    | Some cordova ->
+       (* Warning: big hack here, because cordova-plugin-geolocation is broken *)
        let f_success_cordova pos =
          let latitude = pos##.latitude in
          let longitude = pos##.longitude in
          Lwt.wakeup au (latitude,longitude)
        in
        (* Bypass cordova-plugin-geolocation's JS interface!!
-          Because for some reasons, it doesn't work properly on iOS. 
+          Because for some reasons, it doesn't work properly on iOS.
           Warning: cordova##exec doesn't block. It returns immediately.
           It doesn't raise an exception if the callee doesn't exist.
           If the callee doesn't exist, none of the callbacks will be
