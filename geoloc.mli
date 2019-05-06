@@ -1,4 +1,5 @@
 open Googlemaps
+open Js_of_ocaml
 
 exception NoLocation of string
 
