@@ -1,5 +1,5 @@
 NAME=geoloc
-PACKAGES=-package js_of_ocaml,js_of_ocaml-lwt,lwt_ppx,gen_js_api,ocaml-googlemaps,js_of_ocaml.ppx
+PACKAGES=-package js_of_ocaml,js_of_ocaml-lwt,lwt_ppx,gen_js_api,ocaml-googlemaps,js_of_ocaml-ppx
 SYNTAX= -package lwt_ppx
 
 all:
