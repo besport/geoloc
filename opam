@@ -17,6 +17,6 @@ depends: [
   "gen_js_api"
   "js_of_ocaml-lwt"
   "js_of_ocaml-ppx"
-  "ocaml-googlemaps"
+  "ocaml-woosmap"
   "ocamlfind" {build}
 ]

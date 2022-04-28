@@ -1,4 +1,4 @@
-open Googlemaps
+open Woosmap
 open Js_of_ocaml
 open Js_of_ocaml_lwt
 
@@ -49,7 +49,7 @@ let create_map ?mapoptions (lat,lng) zoom elt =
       MapOptions.set_zoom o zoom;
       o
   in
-  let elt = Converter.Element.t_of_dom elt in
+  let elt = Woosmap_converter.Element.t_of_dom elt in
   Map.new_map elt ~opts ()
 
 let get_my_position ?(timeout=5.) () =
