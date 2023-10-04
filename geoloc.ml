@@ -60,8 +60,8 @@ let get_my_position ?(timeout=5.) () =
     let () = options##.enableHighAccuracy := true in
     let f_success pos =
       let coords = pos##.coords in
-      let latitude = coords##.latitude in
-      let longitude = coords##.longitude in
+      let latitude = Js.to_float coords##.latitude in
+      let longitude = Js.to_float coords##.longitude in
       Lwt.wakeup au (latitude,longitude)
     in
     let f_error err =
